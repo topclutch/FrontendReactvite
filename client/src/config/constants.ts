@@ -8,46 +8,40 @@ const getEnv = (key: string, defaultValue: string): string => {
   return value;
 };
 
-// Detectar si estamos en localhost o no
-const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+// Detección más robusta del entorno
+const getBackendURL = () => {
+  const hostname = window.location.hostname;
+  
+  // Desarrollo local
+  if (['localhost', '127.0.0.1'].includes(hostname)) {
+    return {
+      backend1: getEnv("VITE_BACKEND1_URL_LOCAL", "http://localhost:3001"),
+      backend2: getEnv("VITE_BACKEND2_URL_LOCAL", "http://localhost:5000")
+    };
+  }
+  
+  // Producción en Render
+  if (hostname.includes('onrender.com')) {
+    return {
+      backend1: getEnv("VITE_BACKEND1_URL_LAN", "https://backend1nodejs.onrender.com"),
+      backend2: getEnv("VITE_BACKEND2_URL_LAN", "https://backendflask-r0xg.onrender.com")
+    };
+  }
+  
+  // Red local/LAN
+  return {
+    backend1: getEnv("VITE_BACKEND1_URL_LAN", "http://192.168.43.62:3001"),
+    backend2: getEnv("VITE_BACKEND2_URL_LAN", "http://192.168.43.62:5000")
+  };
+};
 
-// Configuración de APIs
+const backendURLs = getBackendURL();
+
 export const API_CONFIG = {
-  BACKEND1_URL: isLocalhost
-    ? getEnv("VITE_BACKEND1_URL_LOCAL", "http://localhost:3001")
-    : getEnv("VITE_BACKEND1_URL_LAN", "http://192.168.43.62:3001"),
-
-  BACKEND2_URL: isLocalhost
-    ? getEnv("VITE_BACKEND2_URL_LOCAL", "http://localhost:5000")
-    : getEnv("VITE_BACKEND2_URL_LAN", "http://192.168.43.62:5000"),
-
+  BACKEND1_URL: backendURLs.backend1,
+  BACKEND2_URL: backendURLs.backend2,
   MAX_RETRIES: 3,
   DEFAULT_TIMEOUT: 15000,
 };
 
-// Roles
-export const ROLES = {
-  ADMIN: "Administrador",
-  VENDEDOR: "Vendedor",
-  CONSULTOR: "Consultor",
-} as const;
-
-// Rutas
-export const ROUTES = {
-  HOME: "/",
-  LOGIN: "/login",
-  REGISTER: "/register",
-  DASHBOARD: "/dashboard",
-  USERS: "/users",
-  PRODUCTS: "/products",
-  SALES: "/sales",
-  REPORTS: "/reports",
-} as const;
-
-// APIs externas
-export const EXTERNAL_APIS = {
-  FAKE_STORE: "https://fakestoreapi.com",
-  WEATHER: "https://api.openweathermap.org/data/2.5",
-  COUNTRIES: "https://restcountries.com/v3.1",
-  JSONPLACEHOLDER: "https://jsonplaceholder.typicode.com",
-};
+console.log('API Configuration:', API_CONFIG);
