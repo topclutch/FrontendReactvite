@@ -275,7 +275,7 @@ const Sales = () => {
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-slate-200/50">
         <div className="flex items-center space-x-4">
           <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl shadow-lg">
-            <ShoppingCart className="h-8 w-8 text-white" />
+            <ShoppingCart className="h-8 w-8 text-black" />
           </div>
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
@@ -334,7 +334,7 @@ const Sales = () => {
                   <button
                     onClick={() => addProduct(product)}
                     disabled={product.stock === 0}
-                    className="ml-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-2 rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="ml-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-black px-4 py-2 rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
@@ -497,7 +497,7 @@ const Sales = () => {
                   clientName.trim().length < 2 ||
                   selectedProducts.some((p) => p.quantity > (products.find((prod) => prod.id === p.id)?.stock || 0))
                 }
-                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-4 px-6 rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg shadow-lg flex items-center justify-center"
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-black py-4 px-6 rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg shadow-lg flex items-center justify-center"
               >
                 {loading ? (
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-2"></div>
