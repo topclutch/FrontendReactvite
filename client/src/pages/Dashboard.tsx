@@ -34,6 +34,7 @@ interface RecentActivity {
   time: string
   icon: React.ComponentType<any>
 }
+
 const Dashboard: React.FC = () => {
   const { user } = useAuth()
   const [stats, setStats] = useState<DashboardStats>({
@@ -59,70 +60,85 @@ const Dashboard: React.FC = () => {
     try {
       setLoading(true)
       setError(null)
-      setLoadingStates({ products: true, sales: true, users: true })
+      
+      // Determinar qué datos cargar según el rol
+      const userRole = user?.role_id?.name || user?.role || "Usuario"
+      const isAdmin = userRole === "Administrador"
+      const isVendedor = userRole === "Vendedor"
+      const isConsultor = userRole === "Consultor"
+      
+      setLoadingStates({ 
+        products: true, 
+        sales: true, 
+        users: isAdmin // Solo cargar usuarios si es administrador
+      })
 
-      console.log("Loading dashboard data...")
+      console.log("Loading dashboard data for role:", userRole)
 
-      const [productsResponse, salesResponse, usersResponse] = await Promise.allSettled([
-        backend2Api.get("/api/products"),
-        backend1Api.get("/api/sales"),
-        backend1Api.get("/api/users"),
-      ])
-
+      // Cargar productos (todos los roles)
       let products: any[] = []
-      let sales: any[] = []
-      let users: any[] = []
-      let hasErrors = false
-
-      if (productsResponse.status === "fulfilled") {
-        if (productsResponse.value.data.success && Array.isArray(productsResponse.value.data.data)) {
-          products = productsResponse.value.data.data
-        } else if (Array.isArray(productsResponse.value.data)) {
-          products = productsResponse.value.data
+      try {
+        const productsResponse = await backend2Api.get("/api/products")
+        if (productsResponse.data.success && Array.isArray(productsResponse.data.data)) {
+          products = productsResponse.data.data
+        } else if (Array.isArray(productsResponse.data)) {
+          products = productsResponse.data
         }
         console.log(`Loaded ${products.length} products`)
-        setLoadingStates((prev) => ({ ...prev, products: false }))
-      } else {
-        console.error("Failed to load products:", productsResponse.reason)
-        hasErrors = true
-        setLoadingStates((prev) => ({ ...prev, products: false }))
+      } catch (error) {
+        console.error("Failed to load products:", error)
+      } finally {
+        setLoadingStates(prev => ({ ...prev, products: false }))
       }
 
-      if (salesResponse.status === "fulfilled") {
-        if (salesResponse.value.data.success && Array.isArray(salesResponse.value.data.data)) {
-          sales = salesResponse.value.data.data
-        } else if (Array.isArray(salesResponse.value.data)) {
-          sales = salesResponse.value.data
+      // Cargar ventas (todos excepto Almacenista)
+      let sales: any[] = []
+      if (!isAlmacenista) {
+        try {
+          const salesResponse = await backend1Api.get("/api/sales")
+          if (salesResponse.data.success && Array.isArray(salesResponse.data.data)) {
+            sales = salesResponse.data.data
+          } else if (Array.isArray(salesResponse.data)) {
+            sales = salesResponse.data
+          }
+          console.log(`Loaded ${sales.length} sales`)
+        } catch (error) {
+          console.error("Failed to load sales:", error)
+        } finally {
+          setLoadingStates(prev => ({ ...prev, sales: false }))
         }
-        console.log(`Loaded ${sales.length} sales`)
-        setLoadingStates((prev) => ({ ...prev, sales: false }))
       } else {
-        console.error("Failed to load sales:", salesResponse.reason)
-        hasErrors = true
-        setLoadingStates((prev) => ({ ...prev, sales: false }))
+        setLoadingStates(prev => ({ ...prev, sales: false }))
       }
 
-      if (usersResponse.status === "fulfilled") {
-        if (usersResponse.value.data.success && Array.isArray(usersResponse.value.data.data)) {
-          users = usersResponse.value.data.data
-        } else if (Array.isArray(usersResponse.value.data)) {
-          users = usersResponse.value.data
+      // Cargar usuarios (solo administradores)
+      let users: any[] = []
+      if (isAdmin) {
+        try {
+          const usersResponse = await backend1Api.get("/api/users")
+          if (usersResponse.data.success && Array.isArray(usersResponse.data.data)) {
+            users = usersResponse.data.data
+          } else if (Array.isArray(usersResponse.data)) {
+            users = usersResponse.data
+          }
+          console.log(`Loaded ${users.length} users`)
+        } catch (error) {
+          console.error("Failed to load users:", error)
+        } finally {
+          setLoadingStates(prev => ({ ...prev, users: false }))
         }
-        console.log(`Loaded ${users.length} users`)
-        setLoadingStates((prev) => ({ ...prev, users: false }))
       } else {
-        console.error("Failed to load users:", usersResponse.reason)
-        hasErrors = true
-        setLoadingStates((prev) => ({ ...prev, users: false }))
+        setLoadingStates(prev => ({ ...prev, users: false }))
       }
 
-      const revenue = sales.reduce((total: number, sale: any) => {
+      // Calcular ingresos (solo para roles con acceso a ventas)
+      const revenue = !isAlmacenista ? sales.reduce((total: number, sale: any) => {
         const saleTotal = sale.total || 0
         if (typeof saleTotal === "number" && !isNaN(saleTotal)) {
           return total + saleTotal
         }
         return total
-      }, 0)
+      }, 0) : 0
 
       setStats({
         users: users.length,
@@ -131,9 +147,10 @@ const Dashboard: React.FC = () => {
         revenue,
       })
 
+      // Generar actividades según el rol
       const activities: RecentActivity[] = []
 
-      if (sales.length > 0) {
+      if (!isAlmacenista && sales.length > 0) {
         const recentSale = sales[sales.length - 1]
         activities.push({
           type: "sale",
@@ -143,7 +160,7 @@ const Dashboard: React.FC = () => {
         })
       }
 
-      if (users.length > 0) {
+      if (isAdmin && users.length > 0) {
         activities.push({
           type: "user",
           message: `${users.length} usuarios en el sistema`,
@@ -173,11 +190,12 @@ const Dashboard: React.FC = () => {
 
       setRecentActivity(activities)
 
-      if (hasErrors) {
-        const errorMessage = "Algunos datos no se pudieron cargar completamente"
-        setError(errorMessage)
-        toast.error(errorMessage)
-      } else if (products.length === 0 && sales.length === 0 && users.length === 0) {
+      // Verificar si hay errores
+      const hasProducts = products.length > 0
+      const hasSales = isAlmacenista ? true : sales.length > 0 // Para almacenista, no necesita ventas
+      const hasUsers = !isAdmin ? true : users.length > 0 // Para no administradores, no necesita usuarios
+
+      if (!hasProducts && !hasSales && !hasUsers) {
         const warningMessage = "No se encontraron datos en el sistema"
         setError(warningMessage)
         toast.error(warningMessage)
@@ -191,10 +209,16 @@ const Dashboard: React.FC = () => {
       toast.error(`Error al cargar el dashboard: ${errorMessage}`)
     } finally {
       setLoading(false)
-      setLoadingStates({ products: false, sales: false, users: false })
     }
   }
 
+  const userRole = user?.role_id?.name || user?.role || "Usuario"
+  const isAdmin = userRole === "Administrador"
+  const isVendedor = userRole === "Vendedor"
+  const isConsultor = userRole === "Consultor"
+  const isAlmacenista = userRole === "Almacenista"
+
+  // Definir tarjetas de estadísticas según el rol
   const statCards = [
     {
       name: "Usuarios",
@@ -204,6 +228,7 @@ const Dashboard: React.FC = () => {
       change: "+12%",
       positive: true,
       loading: loadingStates.users,
+      roles: ["Administrador"],
     },
     {
       name: "Productos",
@@ -213,6 +238,7 @@ const Dashboard: React.FC = () => {
       change: "+8%",
       positive: true,
       loading: loadingStates.products,
+      roles: ["Administrador", "Vendedor", "Consultor", "Almacenista"],
     },
     {
       name: "Ventas",
@@ -222,6 +248,7 @@ const Dashboard: React.FC = () => {
       change: "+23%",
       positive: true,
       loading: loadingStates.sales,
+      roles: ["Administrador", "Vendedor", "Consultor"],
     },
     {
       name: "Ingresos",
@@ -231,17 +258,21 @@ const Dashboard: React.FC = () => {
       change: "+15%",
       positive: true,
       loading: loadingStates.sales,
+      roles: ["Administrador", "Vendedor", "Consultor"],
     },
   ]
 
+  // Filtrar tarjetas por rol
+  const filteredStatCards = statCards.filter(card => card.roles.includes(userRole))
+
   const quickActions = [
     { name: "Gestionar Usuarios", href: "/users", icon: Users, color: "blue", roles: ["Administrador"] },
-    { name: "Gestionar Productos", href: "/products", icon: Package, color: "emerald", roles: ["Administrador"] },
+    { name: "Gestionar Productos", href: "/products", icon: Package, color: "emerald", roles: ["Administrador", "Almacenista"] },
     { name: "Nueva Venta", href: "/sales", icon: ShoppingCart, color: "orange", roles: ["Vendedor", "Administrador"] },
     { name: "Ver Reportes", href: "/reports", icon: BarChart3, color: "purple", roles: ["Consultor", "Administrador"] },
+    { name: "Gestionar Inventario", href: "/inventory", icon: Package, color: "amber", roles: ["Almacenista", "Administrador"] },
   ]
 
-  const userRole = user?.role_id?.name || user?.role || "Usuario"
   const filteredActions = quickActions.filter((action) => action.roles.includes(userRole))
 
   if (loading) {
@@ -254,12 +285,16 @@ const Dashboard: React.FC = () => {
             <span className={loadingStates.products ? "text-blue-600" : "text-green-600"}>
               Productos {loadingStates.products ? "⏳" : "✓"}
             </span>
-            <span className={loadingStates.sales ? "text-blue-600" : "text-green-600"}>
-              Ventas {loadingStates.sales ? "⏳" : "✓"}
-            </span>
-            <span className={loadingStates.users ? "text-blue-600" : "text-green-600"}>
-              Usuarios {loadingStates.users ? "⏳" : "✓"}
-            </span>
+            {!isAlmacenista && (
+              <span className={loadingStates.sales ? "text-blue-600" : "text-green-600"}>
+                Ventas {loadingStates.sales ? "⏳" : "✓"}
+              </span>
+            )}
+            {isAdmin && (
+              <span className={loadingStates.users ? "text-blue-600" : "text-green-600"}>
+                Usuarios {loadingStates.users ? "⏳" : "✓"}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -289,7 +324,6 @@ const Dashboard: React.FC = () => {
 
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-8 text-white relative overflow-hidden">
-        {/* Simplified background pattern to avoid SVG parsing issues */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-800/50 to-slate-900/50 opacity-20"></div>
         <div className="relative z-10">
           <div className="flex items-center justify-between">
@@ -314,7 +348,7 @@ const Dashboard: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat, index) => (
+        {filteredStatCards.map((stat) => (
           <div
             key={stat.name}
             className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-slate-200/50 hover:shadow-xl transition-all duration-300 hover:scale-105"
@@ -354,18 +388,12 @@ const Dashboard: React.FC = () => {
       {/* Quick Actions & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Quick Actions */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-slate-200/50">
-          <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
-            <Activity className="h-6 w-6 mr-2 text-blue-600" />
-            Acciones Rápidas
-          </h3>
-          {filteredActions.length === 0 ? (
-            <div className="text-center py-8">
-              <Activity className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">No hay acciones disponibles para tu rol</p>
-              <p className="text-slate-400 text-sm mt-2">Contacta al administrador si necesitas más permisos</p>
-            </div>
-          ) : (
+        {filteredActions.length > 0 && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-slate-200/50">
+            <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
+              <Activity className="h-6 w-6 mr-2 text-blue-600" />
+              Acciones Rápidas
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {filteredActions.map((action) => (
                 <Link
@@ -384,22 +412,16 @@ const Dashboard: React.FC = () => {
                 </Link>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Recent Activity */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-slate-200/50">
-          <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
-            <TrendingUp className="h-6 w-6 mr-2 text-green-600" />
-            Actividad Reciente
-          </h3>
-          {recentActivity.length === 0 ? (
-            <div className="text-center py-8">
-              <TrendingUp className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">No hay actividad reciente</p>
-              <p className="text-slate-400 text-sm mt-2">La actividad aparecerá aquí cuando haya datos</p>
-            </div>
-          ) : (
+        {recentActivity.length > 0 && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-slate-200/50">
+            <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
+              <TrendingUp className="h-6 w-6 mr-2 text-green-600" />
+              Actividad Reciente
+            </h3>
             <div className="space-y-4">
               {recentActivity.map((activity, index) => (
                 <div key={index} className="flex items-center space-x-4 p-3 bg-slate-50 rounded-xl">
@@ -413,15 +435,15 @@ const Dashboard: React.FC = () => {
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Role-specific Information */}
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-slate-200/50">
         <h3 className="text-2xl font-bold text-slate-900 mb-6">Panel de {userRole}</h3>
 
-        {userRole === "Administrador" && (
+        {isAdmin && (
           <div className="space-y-6">
             <p className="text-slate-600 text-lg">Como administrador, tienes acceso completo al sistema:</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -459,7 +481,7 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {userRole === "Vendedor" && (
+        {isVendedor && (
           <div className="space-y-6">
             <p className="text-slate-600 text-lg">Como vendedor, puedes gestionar tus ventas eficientemente:</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -474,9 +496,6 @@ const Dashboard: React.FC = () => {
                   </li>
                   <li className="flex items-center">
                     <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>Consultar productos disponibles
-                  </li>
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-purple-500 rounded-full mr-3"></span>Gestionar estado de pedidos
                   </li>
                 </ul>
               </div>
@@ -497,7 +516,7 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {userRole === "Consultor" && (
+        {isConsultor && (
           <div className="space-y-6">
             <p className="text-slate-600 text-lg">Como consultor, tienes acceso a análisis y reportes avanzados:</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -535,7 +554,49 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {!["Administrador", "Vendedor", "Consultor"].includes(userRole) && (
+        {isAlmacenista && (
+          <div className="space-y-6">
+            <p className="text-slate-600 text-lg">Como almacenista, puedes gestionar el inventario y productos:</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <h4 className="font-semibold text-slate-900">Tus Herramientas</h4>
+                <ul className="space-y-2 text-slate-600">
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>Gestionar productos
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full mr-3"></span>Controlar inventario
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>Ver stock disponible
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>Alertas de stock bajo
+                  </li>
+                </ul>
+              </div>
+              <div className="p-6 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
+                <h4 className="font-semibold text-amber-800 mb-3">Estado del Inventario</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-amber-700">Productos Totales</span>
+                    <span className="font-bold text-amber-800">{stats.products}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-amber-700">Stock Bajo</span>
+                    <span className="font-bold text-amber-800">
+                      {recentActivity.find(a => a.type === "product" && a.message.includes("bajo")) 
+                        ? recentActivity.find(a => a.type === "product" && a.message.includes("bajo"))?.message.split(" ")[0]
+                        : "0"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!isAdmin && !isVendedor && !isConsultor && !isAlmacenista && (
           <div className="text-center py-8">
             <Users className="h-12 w-12 text-slate-300 mx-auto mb-4" />
             <p className="text-slate-500 text-lg">Bienvenido al sistema</p>
