@@ -281,8 +281,8 @@ const Sales = () => {
             <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
               Nueva Venta
             </h1>
-            <p className="text-slate-600 mt-1">Registra una nueva venta en el sistema</p>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-slate-700 mt-1">Registra una nueva venta en el sistema</p>
+            <p className="text-sm text-slate-600 mt-1">
               Vendedor: {user?.name} | Productos disponibles: {products.length}
             </p>
           </div>
@@ -301,7 +301,7 @@ const Sales = () => {
             <div className="text-center py-8">
               <Package className="h-12 w-12 text-slate-300 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-slate-900 mb-2">No hay productos disponibles</h3>
-              <p className="text-slate-500">No hay productos con stock para vender</p>
+              <p className="text-slate-600">No hay productos con stock para vender</p>
             </div>
           ) : (
             <div className="space-y-4 max-h-96 overflow-y-auto">
@@ -312,11 +312,11 @@ const Sales = () => {
                 >
                   <div className="flex-1">
                     <h3 className="font-semibold text-slate-900">{product.name}</h3>
-                    <p className="text-sm text-slate-600">{product.category_name || product.category}</p>
+                    <p className="text-sm text-slate-700">{product.category_name || product.category}</p>
                     <div className="flex items-center space-x-4 mt-2">
                       <span className="text-lg font-bold text-emerald-600">${product.sale_price || product.price}</span>
                       {product.purchase_price && (
-                        <span className="text-sm text-slate-500">Costo: ${product.purchase_price}</span>
+                        <span className="text-sm text-slate-600">Costo: ${product.purchase_price}</span>
                       )}
                       <span
                         className={`text-sm px-2 py-1 rounded-full ${
@@ -356,7 +356,7 @@ const Sales = () => {
             {selectedProducts.length === 0 ? (
               <div className="text-center py-8">
                 <ShoppingCart className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-500">No hay productos seleccionados</p>
+                <p className="text-slate-600">No hay productos seleccionados</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -373,7 +373,7 @@ const Sales = () => {
                     >
                       <div className="flex-1">
                         <h3 className="font-semibold text-slate-900">{product.name}</h3>
-                        <p className="text-sm text-slate-600">
+                        <p className="text-sm text-slate-700">
                           ${product.sale_price || product.price} c/u (Cantidad: {product.quantity})
                         </p>
                         {isOverStock && (
@@ -390,7 +390,7 @@ const Sales = () => {
                         >
                           <Minus className="h-4 w-4" />
                         </button>
-                        <span className={`w-8 text-center font-semibold ${isOverStock ? "text-red-600" : ""}`}>
+                        <span className={`w-8 text-center font-semibold ${isOverStock ? "text-red-600" : "text-slate-900"}`}>
                           {product.quantity}
                         </span>
                         <button
@@ -413,19 +413,19 @@ const Sales = () => {
 
                 <div className="border-t border-slate-200 pt-4 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Artículos totales:</span>
-                    <span className="font-semibold">{calculateTotalItems()}</span>
+                    <span className="text-slate-700">Artículos totales:</span>
+                    <span className="font-semibold text-slate-900">{calculateTotalItems()}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Subtotal:</span>
-                    <span className="font-semibold">${calculateTotal().toFixed(2)}</span>
+                    <span className="text-slate-700">Subtotal:</span>
+                    <span className="font-semibold text-slate-900">${calculateTotal().toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Ganancia estimada:</span>
+                    <span className="text-slate-700">Ganancia estimada:</span>
                     <span className="font-semibold text-green-600">${calculateTotalProfit().toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center text-xl font-bold border-t pt-2">
-                    <span>Total:</span>
+                    <span className="text-slate-900">Total:</span>
                     <span className="text-emerald-600">${calculateTotal().toFixed(2)}</span>
                   </div>
                 </div>
@@ -448,7 +448,7 @@ const Sales = () => {
                   required
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-black placeholder-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   placeholder="Ingresa el nombre del cliente"
                 />
               </div>
@@ -459,7 +459,7 @@ const Sales = () => {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-black placeholder-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   placeholder="Notas sobre la venta (opcional)"
                 />
               </div>
@@ -467,19 +467,19 @@ const Sales = () => {
               {/* Sale Summary */}
               <div className="bg-slate-50 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-slate-600">Vendedor:</span>
+                  <span className="text-slate-700">Vendedor:</span>
                   <span className="font-semibold text-slate-900">{user?.name}</span>
                 </div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-slate-600">Cliente:</span>
+                  <span className="text-slate-700">Cliente:</span>
                   <span className="font-semibold text-slate-900">{clientName || "Sin especificar"}</span>
                 </div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-slate-600">Artículos totales:</span>
+                  <span className="text-slate-700">Artículos totales:</span>
                   <span className="font-semibold text-slate-900">{calculateTotalItems()}</span>
                 </div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-slate-600">Ganancia:</span>
+                  <span className="text-slate-700">Ganancia:</span>
                   <span className="font-semibold text-green-600">${calculateTotalProfit().toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between text-lg font-bold border-t pt-2">
