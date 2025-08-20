@@ -15,7 +15,7 @@ const Register: React.FC = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "vendedor", // Valor corregido a minúsculas
+    role: "Vendedor", // Valor inicial con mayúscula
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -44,24 +44,31 @@ const Register: React.FC = () => {
     }
 
     try {
-      // Convertir el rol a minúsculas para asegurar consistencia
-      const roleToSend = formData.role.toLowerCase();
-      
-      const response = await backend1Api.post("/api/auth/register", {
+      // Preparar datos para enviar (mantener las mayúsculas como en el modelo)
+      const userData = {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: roleToSend, // Enviar el rol en minúsculas
-      })
+        role: formData.role, // Enviar el rol exactamente como está en el estado
+      }
+
+      console.log("Datos a enviar:", userData)
+
+      const response = await backend1Api.post("/api/auth/register", userData)
 
       if (response.data.success) {
         toast.success("¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.")
+        console.log("Respuesta del servidor:", response.data)
+        
         // Redirect to login
         window.location.href = "/login"
       } else {
-        setError(response.data.message || "Error al crear la cuenta")
+        const errorMsg = response.data.message || "Error al crear la cuenta"
+        setError(errorMsg)
+        toast.error(errorMsg)
       }
     } catch (error: any) {
+      console.error("Error completo:", error)
       const errorMessage = error.response?.data?.message || "Error al crear la cuenta"
       setError(errorMessage)
       toast.error(errorMessage)
@@ -230,9 +237,10 @@ const Register: React.FC = () => {
                     onChange={handleChange}
                     className="block w-full pl-12 pr-4 py-4 bg-white/90 border border-white/20 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 backdrop-blur-sm transition-all duration-200"
                   >
-                    <option value="vendedor">Vendedor</option>
-                    <option value="consultor">Consultor</option>
-                    <option value="administrador">Administrador</option>
+                    <option value="Vendedor">Vendedor</option>
+                    <option value="Consultor">Consultor</option>
+                    <option value="Administrador">Administrador</option>
+                    <option value="Almacenista">Almacenista</option>
                   </select>
                 </div>
               </div>
