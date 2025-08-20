@@ -230,6 +230,7 @@ const Register: React.FC = () => {
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <Shield className="h-5 w-5 text-blue-300" />
                   </div>
+                  // En el formulario, asegurar que los valores de las opciones coincidan exactamente
                   <select
                     id="role"
                     name="role"
@@ -242,6 +243,7 @@ const Register: React.FC = () => {
                     <option value="Administrador">Administrador</option>
                     <option value="Almacenista">Almacenista</option>
                   </select>
+                                  
                 </div>
               </div>
             </div>
