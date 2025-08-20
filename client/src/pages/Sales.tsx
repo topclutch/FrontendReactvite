@@ -124,6 +124,10 @@ const Sales = () => {
     }, 0)
   }
 
+  const calculateTotalItems = () => {
+    return selectedProducts.reduce((total, product) => total + product.quantity, 0)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -369,7 +373,9 @@ const Sales = () => {
                     >
                       <div className="flex-1">
                         <h3 className="font-semibold text-slate-900">{product.name}</h3>
-                        <p className="text-sm text-slate-600">${product.sale_price || product.price} c/u</p>
+                        <p className="text-sm text-slate-600">
+                          ${product.sale_price || product.price} c/u (Cantidad: {product.quantity})
+                        </p>
                         {isOverStock && (
                           <div className="flex items-center text-red-600 text-sm mt-1">
                             <AlertCircle className="h-4 w-4 mr-1" />
@@ -406,6 +412,10 @@ const Sales = () => {
                 })}
 
                 <div className="border-t border-slate-200 pt-4 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600">Artículos totales:</span>
+                    <span className="font-semibold">{calculateTotalItems()}</span>
+                  </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-600">Subtotal:</span>
                     <span className="font-semibold">${calculateTotal().toFixed(2)}</span>
@@ -465,8 +475,8 @@ const Sales = () => {
                   <span className="font-semibold text-slate-900">{clientName || "Sin especificar"}</span>
                 </div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-slate-600">Productos:</span>
-                  <span className="font-semibold text-slate-900">{selectedProducts.length}</span>
+                  <span className="text-slate-600">Artículos totales:</span>
+                  <span className="font-semibold text-slate-900">{calculateTotalItems()}</span>
                 </div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-slate-600">Ganancia:</span>
