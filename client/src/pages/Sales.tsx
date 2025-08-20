@@ -424,7 +424,7 @@ const Sales = () => {
                     <span className="text-slate-700">Ganancia estimada:</span>
                     <span className="font-semibold text-green-600">${calculateTotalProfit().toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between items-center text-xl font-bold border-t pt-2">
+                  <div className="flex justify-between items-center text-xl font-bold border-t border-slate-300 pt-2">
                     <span className="text-slate-900">Total:</span>
                     <span className="text-emerald-600">${calculateTotal().toFixed(2)}</span>
                   </div>
@@ -448,7 +448,7 @@ const Sales = () => {
                   required
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   placeholder="Ingresa el nombre del cliente"
                 />
               </div>
@@ -459,7 +459,7 @@ const Sales = () => {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-gray-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-500 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                   placeholder="Notas sobre la venta (opcional)"
                 />
               </div>
@@ -482,7 +482,7 @@ const Sales = () => {
                   <span className="text-slate-700">Ganancia:</span>
                   <span className="font-semibold text-green-600">${calculateTotalProfit().toFixed(2)}</span>
                 </div>
-                <div className="flex items-center justify-between text-lg font-bold border-t pt-2">
+                <div className="flex items-center justify-between text-lg font-bold border-t border-slate-300 pt-2">
                   <span className="text-slate-900">Total:</span>
                   <span className="text-emerald-600">${calculateTotal().toFixed(2)}</span>
                 </div>
