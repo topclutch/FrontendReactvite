@@ -190,7 +190,7 @@ const Sales = () => {
 
       const saleData = {
         user_id: userId,
-        client: clientName.trim(),
+        //client: clientName.trim(),
         products: selectedProducts.map((p) => ({
           productId: p.id,
           name: p.name,
